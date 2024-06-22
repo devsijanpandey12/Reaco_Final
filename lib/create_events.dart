@@ -40,7 +40,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       final response = await http.post(url,
           body: jsonEncode({
             'event_name': title,
-            'user_id': widget.userData['user_id'],
+            "_id": "string",
+            "event_url": "string",
+            "created_at": "2024-05-28T15:36:51.715008",
+            "images_directory": "string",
+            "is_complete": false,
+            "username": "string"
+            
           }),
           headers: {
             'Content-Type': 'application/json',
@@ -51,7 +57,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         _isLoading = false;
       });
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         setState(() {
           _eventLink = data['event_link'];
@@ -144,10 +150,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextField(
+            Container(
+              decoration: BoxDecoration(
+              border: Border.all(
+                color: Colors.grey,
+                width: 1.0,
+              ),
+              borderRadius: BorderRadius.circular(4.0),
+              ),
+              child: TextField(
               controller: _titleController,
               decoration: InputDecoration(
                 hintText: 'Enter event title',
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.all(16.0),
+              ),
               ),
             ),
             SizedBox(height: 32.0),
@@ -170,11 +187,20 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               )
             else
               Center(
-                child: ElevatedButton(
-                  onPressed: _createEvent,
-                  child: Text('Create Event'),
-                ),
-              ),
+  child: ElevatedButton(
+    onPressed: _createEvent,
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.black, // Background color
+    ),
+    child: Text(
+      'Create Event',
+      style: TextStyle(
+        color: Colors.white, // Text color
+      ),
+    ),
+  ),
+),
+
           ],
         ),
       ),

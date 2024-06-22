@@ -5,6 +5,8 @@ import 'package:reaco/upload_images.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:reaco/verificaton.dart';
+
 class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
 
@@ -42,6 +44,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _birthdateController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -66,6 +69,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true; // Show progress indicator
+      });
+
       // Create user object from form data
       final user = {
         'username': _nameController.text,
@@ -77,17 +84,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ? _nameController.text.split(' ')[1]
             : '',
         'birthdate': _birthdateController.text,
+        'account_type': 'basic',
+        'is_verified': false,
+        
       };
 
       // Send POST request to backend API for registration
       final registrationResponse = await http.post(
-        Uri.parse('https://x200lnxp-8000.inc1.devtunnels.ms/user/register'),
+        Uri.parse('https://x200lnxp-8000.inc1.devtunnels.ms/users/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(user),
       );
 
       // Handle registration response
-      if (registrationResponse.statusCode == 200) {
+      if (registrationResponse.statusCode == 201) {
         // Registration successful, now try to log in
         Response loginResponse = await http.post(
           Uri.parse('https://x200lnxp-8000.inc1.devtunnels.ms/login'),
@@ -110,7 +120,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => UploadScreen(userData:userData),
+              builder: (context) => Verification(userData: userData),
             ),
           );
         } else {
@@ -131,136 +141,155 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
         );
       }
+
+      setState(() {
+        _isLoading = false; // Hide progress indicator
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'WELCOME',
-              style: TextStyle(
-                fontSize: 24.0,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            const Text(
-              'Lets start with registration',
-              style: TextStyle(fontSize: 16.0),
-            ),
-            const SizedBox(height: 32.0),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: _getInputDecoration('Enter your full name'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
-                      }
-                      return null;
-                    },
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'WELCOME',
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 16.0),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: _getInputDecoration('Enter your email'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Please enter a valid email address';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: _getInputDecoration('Phone number'),
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: _getInputDecoration('Enter password'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a password';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: true,
-                    decoration: _getInputDecoration('Confirm password'),
-                    validator: (value) {
-                      if (value != _passwordController.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16.0),
-                  TextFormField(
-                    controller: _birthdateController,
-                    decoration: _getInputDecoration(
-                        'Enter your birthdate (YYYY-MM-DD)'),
-                    keyboardType: TextInputType.datetime,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your birthdate';
-                      }
-                      // Add validation for date format
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 32.0),
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('REGISTER'),
-                  ),
-                  const SizedBox(height: 16.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                ),
+                const SizedBox(height: 16.0),
+                const Text(
+                  'Lets start with registration',
+                  style: TextStyle(fontSize: 16.0),
+                ),
+                const SizedBox(height: 32.0),
+                Form(
+                  key: _formKey,
+                  child: Column(
                     children: [
-                      const Text('Already have an account? '),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SCREENN(),
-                            ),
-                          );
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: _getInputDecoration('Enter your full name'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
                         },
-                        child: const Text('Sign in'),
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: _getInputDecoration('Enter your email'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!value.contains('@') || !value.contains('.')) {
+                            return 'Please enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration: _getInputDecoration('Phone number'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: _getInputDecoration('Enter password'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a password';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: true,
+                        decoration: _getInputDecoration('Confirm password'),
+                        validator: (value) {
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
+                      TextFormField(
+                        controller: _birthdateController,
+                        decoration: _getInputDecoration(
+                            'Enter your birthdate (YYYY-MM-DD)'),
+                        keyboardType: TextInputType.datetime,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your birthdate';
+                          }
+                          // Add validation for date format
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32.0),
+                      ElevatedButton(
+                        onPressed: _submitForm,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('REGISTER'),
+                      ),
+                      const SizedBox(height: 16.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('Already have an account? '),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SCREENN(),
+                                ),
+                              );
+                            },
+                            child: const Text('Sign in'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (_isLoading)
+          ModalBarrier(
+            dismissible: false,
+            color: Colors.black.withOpacity(0.5),
+          ),
+        if (_isLoading)
+          const Center(
+            child: CircularProgressIndicator(
+              color: Colors.white,
+            ),
+          ),
+      ],
     );
   }
 }

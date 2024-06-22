@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:reaco/create_events.dart';
 import 'package:reaco/dashboard.dart';
+import 'package:reaco/event_images.dart';
 import 'package:reaco/events_joined.dart';
 import 'package:reaco/join_events.dart';
 import 'package:reaco/login.dart';
@@ -15,6 +16,8 @@ import 'package:reaco/profile.dart';
 import 'package:reaco/splashscreen.dart';
 // import 'package:reaco/welcome.dart';
 import 'package:reaco/upload_images.dart';
+import 'package:reaco/user_image_upload.dart';
+import 'package:reaco/verificaton.dart';
 // import 'package:reaco/signup_photograpger.dart';
 // import 'package:reaco/signup_user.dart';
 
@@ -25,7 +28,7 @@ import 'package:reaco/upload_images.dart';
 
 void main() {
   runApp(MaterialApp(
-    home: Splash(),
+    home: SplashScreen(),
     routes: {
       '/home': (context) => SCREENN(),
       // Add other routes here
@@ -37,6 +40,12 @@ void main() {
       // Route for PhotographerPage
 
       '/upload': (context) => UploadScreen(userData:{}),
+
+      '/verification': (context) => Verification(userData:{}),
+
+      '/upload-images': (context) => ImageUploadScreen(userData:{},eventUrl: "",),
+      
+      '/event-images': (context) => EventImagesScreen(userData:{},eventUrl: "",),
 
       '/dash': (context) => DashBoard(userData: {},),
 

@@ -17,11 +17,17 @@ class _SCREENNState extends State<SCREENN> with SingleTickerProviderStateMixin {
   TextEditingController passwordController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  bool _isLoading = false; // Add this flag to manage loading state
+
 
   // Define a function to handle form submission
   Future<void> _submitForm() async {
     // Check if the form is valid
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true; // Show progress indicator
+      });
+
       // Create user object from form data
       final user = {
         'username': emailController.text,
@@ -33,25 +39,35 @@ class _SCREENNState extends State<SCREENN> with SingleTickerProviderStateMixin {
         Response response = await post(
           Uri.parse('https://x200lnxp-8000.inc1.devtunnels.ms/login'),
           body: user,
-        );
+        ).timeout(Duration(seconds: 6));
 
         // Handle the response from the server
         if (response.statusCode == 200) {
           // Successful login
           // Navigate to the dashboard or perform other actions
           final Map<String, dynamic> userData = jsonDecode(response.body);
-          Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => DashBoard(userData:userData),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: child,
-                );
-              },
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login Successful'),
+              duration: Duration(seconds: 2),
             ),
           );
+          Future.delayed(Duration(seconds: 2), () {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    DashBoard(userData: userData),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
+              ),
+            );
+          });
         } else {
           // Handle errors from the server
           // Display an error message to the user
@@ -64,6 +80,15 @@ class _SCREENNState extends State<SCREENN> with SingleTickerProviderStateMixin {
       } catch (e) {
         print(e.toString());
         // Handle network or other errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An error occurred. Please try again.'),
+          ),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false; // Hide progress indicator
+        });
       }
     }
   }
@@ -308,6 +333,15 @@ class _SCREENNState extends State<SCREENN> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                ),
+              ),
+            ),
         ],
       ),
     );
