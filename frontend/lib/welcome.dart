@@ -31,7 +31,7 @@ class _WELCOMEState extends State<WELCOME> with SingleTickerProviderStateMixin {
       ),
     );
 
-    // Start the animation
+    // Start the animations
     _controller.forward();
   }
 
